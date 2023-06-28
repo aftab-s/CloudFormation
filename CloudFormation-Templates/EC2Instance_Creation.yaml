@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template creates an EC2 Instance with Ubuntu 20.04 LTS
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-053b0d53c279acc90  #  AMI ID
+      InstanceType: t2.micro  # Desired instance type
+      KeyName: Key  # Name of EC2 key pair
+      Tags:
+        - Key: Name
+          Value: CloudFormation Instance  # Name of instance  
