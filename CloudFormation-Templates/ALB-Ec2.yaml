@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  cfninstance1:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-0261755bbcb8c4a84
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref CFNSecurityGroup
+      KeyName: TestInstance_Key
+      Tags:
+        - Key: Name
+          Value: CFNIstance1
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install -y nginx
+          service nginx start
+          echo "Hello from Instance 1" > /var/www/html/index.html
+
+  cfninstance2:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-0261755bbcb8c4a84
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref CFNSecurityGroup
+      KeyName: TestInstance_Key
+      Tags:
+        - Key: Name
+          Value: CFNIstance2
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install -y nginx
+          service nginx start
+          echo "Hello from Instance 2" > /var/www/html/index.html
+
+  MyTargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      Targets:
+        - Id: !Ref cfninstance1
+        - Id: !Ref cfninstance2
+
+  CFNSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Allows HTTP Traffic From Everywhere
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  MyLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Name: MyLoadBalancer
+      Subnets:
+        - subnet-083d03a45219f7ea8
+      SecurityGroups:
+        - !Ref CFNSecurityGroup
+      Type: application
+      VpcId: default 
+      Tags:
+        - Key: Name
+          Value: MyLoadBalancer
+      Properties:
+        LoadBalancerAttributes:
+          - Key: idle_timeout.timeout_seconds
+            Value: '60'
+        Listeners:
+          - LoadBalancerPort: 80
+            Protocol: HTTP
+            InstancePort: 80
+            InstanceProtocol: HTTP
+            TargetGroupArn: !Ref MyTargetGroup
